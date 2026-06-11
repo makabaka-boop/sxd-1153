@@ -13,7 +13,8 @@ class KnowledgeService:
         page: int = 1,
         page_size: int = 10,
         user_id: Optional[int] = None,
-        review_status: Optional[str] = None
+        review_status: Optional[str] = None,
+        keyword: Optional[str] = None
     ):
         query = db.query(Knowledge).filter(Knowledge.review_status != 'rejected')
         
@@ -27,6 +28,13 @@ class KnowledgeService:
         
         if review_status:
             query = query.filter(Knowledge.review_status == review_status)
+        
+        if keyword:
+            keyword_pattern = f"%{keyword}%"
+            query = query.filter(
+                (Knowledge.title.like(keyword_pattern)) |
+                (Knowledge.content.like(keyword_pattern))
+            )
         
         total = query.count()
         items = query.order_by(Knowledge.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()

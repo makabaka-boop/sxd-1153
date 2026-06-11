@@ -145,6 +145,7 @@
             :field-names="{ children: 'children', label: 'name', value: 'id' }"
             tree-default-expand-all
             allow-clear
+            :disabled-values="disabledTreeNodeValues"
           />
         </a-form-item>
       </a-form>
@@ -169,7 +170,7 @@
             style="width: 100%"
             :field-names="{ children: 'children', label: 'name', value: 'id' }"
             tree-default-expand-all
-            :disabled-tree-nodes="disabledNodes"
+            :disabled-values="disabledTreeNodeValues"
           />
         </a-form-item>
       </a-form>
@@ -233,6 +234,7 @@ import { useCategoryStore } from '@/stores/category'
 import { getNodeSummary, type NodeSummary } from '@/api/summary'
 import { type CategoryCreate, type CategoryUpdate } from '@/api/category'
 import { useUserStore } from '@/stores/user'
+import { getGroups } from '@/api/groups'
 import type { Rule } from 'ant-design-vue/es/form'
 
 const userStore = useUserStore()
@@ -280,7 +282,7 @@ const treeSelectData = computed(() => {
   return filterActive(categoryStore.treeData)
 })
 
-const disabledNodes = computed(() => {
+const disabledNodeIds = computed(() => {
   const collectIds = (nodes: any[]): number[] => {
     let ids: number[] = []
     for (const n of nodes) {
@@ -291,6 +293,10 @@ const disabledNodes = computed(() => {
   }
   if (!selectedCategory.value) return []
   return collectIds([selectedCategory.value])
+})
+
+const disabledTreeNodeValues = computed(() => {
+  return disabledNodeIds.value
 })
 
 const groupTreeSelectData = computed(() => {
@@ -308,14 +314,9 @@ const groupTreeSelectData = computed(() => {
 
 const loadGroups = async () => {
   try {
-    const res = await fetch('/api/groups', {
-      headers: {
-        'Authorization': `Bearer ${userStore.token}`
-      }
-    })
-    const data = await res.json()
-    if (data.code === 200) {
-      groupList.value = data.data
+    const res = await getGroups()
+    if (res.code === 200) {
+      groupList.value = res.data
     }
   } catch (e) {
     console.error('Load groups failed:', e)
@@ -480,21 +481,28 @@ const formatDate = (date: string) => {
 const handleOpenEditModal = (e: CustomEvent) => {
   const { node, parentId } = e.detail
   if (node) {
+    categoryStore.setSelected(node.id)
     openEditModal()
   } else {
     openAddModal(null, parentId)
   }
 }
 
-const handleOpenMoveDialog = () => {
+const handleOpenMoveDialog = (e: CustomEvent) => {
+  const { node } = e.detail
+  categoryStore.setSelected(node.id)
   openMoveModal()
 }
 
-const handleOpenMergeDialog = () => {
+const handleOpenMergeDialog = (e: CustomEvent) => {
+  const { node } = e.detail
+  categoryStore.setSelected(node.id)
   openMergeModal()
 }
 
-const handleOpenCopyDialog = () => {
+const handleOpenCopyDialog = (e: CustomEvent) => {
+  const { node } = e.detail
+  categoryStore.setSelected(node.id)
   openCopyModal()
 }
 

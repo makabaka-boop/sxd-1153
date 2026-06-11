@@ -19,11 +19,12 @@ def get_knowledge_list(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(10, ge=1, le=100, description="每页数量"),
     review_status: Optional[str] = Query(None, description="复核状态"),
+    keyword: Optional[str] = Query(None, description="搜索关键词（标题或内容）"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     result = KnowledgeService.get_knowledge_list(
-        db, category_id, page, page_size, current_user.id, review_status
+        db, category_id, page, page_size, current_user.id, review_status, keyword
     )
     return ApiResponse(data=result)
 
@@ -33,7 +34,7 @@ def get_my_knowledge(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(10, ge=1, le=100, description="每页数量"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(["employee"]))
+    current_user: User = Depends(require_role(["employee", "supervisor"]))
 ):
     result = KnowledgeService.get_my_knowledge(db, current_user.id, page, page_size)
     return ApiResponse(data=result)
@@ -53,8 +54,8 @@ def get_knowledge(
 def create_knowledge(
     knowledge_data: KnowledgeCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(["employee"]))
-):
+    current_user: User = Depends(require_role(["employee", "supervisor"]))
+:
     knowledge = KnowledgeService.create_knowledge(db, knowledge_data, current_user.id)
     return ApiResponse(data=knowledge, message="提交成功")
 
@@ -64,8 +65,8 @@ def update_knowledge(
     knowledge_id: int,
     knowledge_data: KnowledgeUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(["employee"]))
-):
+    current_user: User = Depends(require_role(["employee", "supervisor"]))
+:
     knowledge = KnowledgeService.update_knowledge(db, knowledge_id, knowledge_data, current_user.id)
     return ApiResponse(data=knowledge, message="更新成功")
 
@@ -74,7 +75,7 @@ def update_knowledge(
 def delete_knowledge(
     knowledge_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(["employee"]))
-):
+    current_user: User = Depends(require_role(["employee", "supervisor"]))
+:
     KnowledgeService.delete_knowledge(db, knowledge_id, current_user.id)
     return ApiResponse(message="删除成功")

@@ -188,16 +188,39 @@ const treeNodes = computed(() => {
 })
 
 const transformTreeData = (nodes: CategoryNode[]): any[] => {
-  return nodes
-    .filter(node => includeInactive.value || node.is_active)
-    .map(node => ({
-      ...node,
-      key: node.id,
-      title: node.name,
-      data: node,
-      children: node.children ? transformTreeData(node.children) : undefined,
-      disabled: !node.is_active && !includeInactive.value
-    }))
+  const keyword = searchValue.value?.trim()?.toLowerCase()
+  if (!keyword) {
+    return nodes
+      .filter(node => includeInactive.value || node.is_active)
+      .map(node => ({
+        ...node,
+        key: node.id,
+        title: node.name,
+        data: node,
+        children: node.children ? transformTreeData(node.children) : undefined,
+        disabled: !node.is_active && !includeInactive.value
+      }))
+  }
+  const filterNodes = (list: CategoryNode[]): any[] => {
+    const result: any[] = []
+    for (const node of list) {
+      if (!(includeInactive.value || node.is_active)) continue
+      const nameMatch = node.name.toLowerCase().includes(keyword)
+      const childNodes = node.children ? filterNodes(node.children) : []
+      if (nameMatch || childNodes.length > 0) {
+        result.push({
+          ...node,
+          key: node.id,
+          title: node.name,
+          data: node,
+          children: childNodes.length > 0 ? childNodes : undefined,
+          disabled: !node.is_active && !includeInactive.value
+        })
+      }
+    }
+    return result
+  }
+  return filterNodes(nodes)
 }
 
 const loadSummaries = async () => {

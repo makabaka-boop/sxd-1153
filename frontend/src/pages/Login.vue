@@ -25,16 +25,22 @@
             v-model:value="formData.username"
             size="large"
             placeholder="请输入用户名"
-            :prefix="UserOutlined"
-          />
+          >
+            <template #prefix>
+              <UserOutlined />
+            </template>
+          </a-input>
         </a-form-item>
         <a-form-item name="password" label="密码">
           <a-input-password
             v-model:value="formData.password"
             size="large"
             placeholder="请输入密码"
-            :prefix="LockOutlined"
-          />
+          >
+            <template #prefix>
+              <LockOutlined />
+            </template>
+          </a-input-password>
         </a-form-item>
         <a-button
           type="primary"

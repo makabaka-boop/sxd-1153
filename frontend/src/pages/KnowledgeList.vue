@@ -278,7 +278,8 @@ const loadKnowledge = async () => {
       category_id: categoryStore.selectedCategoryId || undefined,
       page: pagination.current,
       page_size: pagination.pageSize,
-      review_status: statusFilter.value
+      review_status: statusFilter.value,
+      keyword: searchKeyword.value || undefined
     }
     const res = await getKnowledgeList(params)
     if (res.code === 200) {

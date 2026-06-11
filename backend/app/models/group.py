@@ -10,6 +10,7 @@ class UserGroup(Base):
     name = Column(String(100), nullable=False)
     description = Column(Text)
     created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     categories = relationship("Category", back_populates="group")
     members = relationship("GroupMember", back_populates="group")
