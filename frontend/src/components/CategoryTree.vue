@@ -323,6 +323,8 @@ const handleContextMenuClick = ({ key }: { key: string }) => {
   const node = contextNode.value
   switch (key) {
     case 'view':
+      selectedKeys.value = [node.id]
+      categoryStore.setSelected(node.id)
       emit('select', node)
       break
     case 'add':

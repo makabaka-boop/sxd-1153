@@ -1,4 +1,4 @@
-import request from './request'
+import request, { type ApiResponse } from './request'
 
 export interface NodeSummary {
   category_id: number

@@ -145,7 +145,6 @@
             :field-names="{ children: 'children', label: 'name', value: 'id' }"
             tree-default-expand-all
             allow-clear
-            :disabled-values="disabledTreeNodeValues"
           />
         </a-form-item>
       </a-form>
@@ -170,7 +169,6 @@
             style="width: 100%"
             :field-names="{ children: 'children', label: 'name', value: 'id' }"
             tree-default-expand-all
-            :disabled-values="disabledTreeNodeValues"
           />
         </a-form-item>
       </a-form>
@@ -276,6 +274,7 @@ const treeSelectData = computed(() => {
       .filter((n: any) => n.is_active)
       .map((n: any) => ({
         ...n,
+        disabled: disabledNodeIds.value.includes(n.id),
         children: n.children ? filterActive(n.children) : undefined
       }))
   }
@@ -293,10 +292,6 @@ const disabledNodeIds = computed(() => {
   }
   if (!selectedCategory.value) return []
   return collectIds([selectedCategory.value])
-})
-
-const disabledTreeNodeValues = computed(() => {
-  return disabledNodeIds.value
 })
 
 const groupTreeSelectData = computed(() => {

@@ -1,4 +1,4 @@
-import request from './request'
+import request, { type ApiResponse } from './request'
 import type { KnowledgeItem, KnowledgeListResponse } from './knowledge'
 
 export interface ReviewRequest {

@@ -24,6 +24,16 @@ class MemberAdd(BaseModel):
     user_id: int = Field(..., description="用户ID")
 
 
+def serialize_group(group: UserGroup):
+    return {
+        "id": group.id,
+        "name": group.name,
+        "description": group.description,
+        "created_at": group.created_at,
+        "updated_at": group.updated_at,
+    }
+
+
 @router.get("", response_model=ApiResponse)
 def get_groups(
     db: Session = Depends(get_db),
@@ -41,6 +51,7 @@ def get_groups(
             "name": group.name,
             "description": group.description,
             "created_at": group.created_at,
+            "updated_at": group.updated_at,
             "members": member_list
         })
     return ApiResponse(data=result)
@@ -56,7 +67,7 @@ def create_group(
     db.add(group)
     db.commit()
     db.refresh(group)
-    return ApiResponse(data=group, message="创建成功")
+    return ApiResponse(data=serialize_group(group), message="创建成功")
 
 
 @router.put("/{group_id}", response_model=ApiResponse)
@@ -77,7 +88,7 @@ def update_group(
     
     db.commit()
     db.refresh(group)
-    return ApiResponse(data=group, message="更新成功")
+    return ApiResponse(data=serialize_group(group), message="更新成功")
 
 
 @router.delete("/{group_id}", response_model=ApiResponse)

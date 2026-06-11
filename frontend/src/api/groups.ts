@@ -1,4 +1,4 @@
-import request from './request'
+import request, { type ApiResponse } from './request'
 
 export interface Group {
   id: number
@@ -18,38 +18,21 @@ export interface GroupUpdate {
 }
 
 export function getGroups() {
-  return request<Group[]>({
-    url: '/groups',
-    method: 'GET'
-  })
+  return request.get<any, ApiResponse<Group[]>>('/groups')
 }
 
 export function getGroup(id: number) {
-  return request<Group>({
-    url: `/groups/${id}`,
-    method: 'GET'
-  })
+  return request.get<any, ApiResponse<Group>>(`/groups/${id}`)
 }
 
 export function createGroup(data: GroupCreate) {
-  return request<Group>({
-    url: '/groups',
-    method: 'POST',
-    data
-  })
+  return request.post<any, ApiResponse<Group>>('/groups', data)
 }
 
 export function updateGroup(id: number, data: GroupUpdate) {
-  return request<Group>({
-    url: `/groups/${id}`,
-    method: 'PUT',
-    data
-  })
+  return request.put<any, ApiResponse<Group>>(`/groups/${id}`, data)
 }
 
 export function deleteGroup(id: number) {
-  return request({
-    url: `/groups/${id}`,
-    method: 'DELETE'
-  })
+  return request.delete<any, ApiResponse>(`/groups/${id}`)
 }

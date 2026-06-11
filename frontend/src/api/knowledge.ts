@@ -1,4 +1,4 @@
-import request from './request'
+import request, { type ApiResponse } from './request'
 
 export interface KnowledgeItem {
   id: number
@@ -39,6 +39,7 @@ export const getKnowledgeList = (params: {
   page?: number
   page_size?: number
   review_status?: string
+  keyword?: string
 }) => {
   return request.get<any, ApiResponse<KnowledgeListResponse>>('/knowledge', { params })
 }

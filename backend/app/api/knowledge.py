@@ -55,7 +55,7 @@ def create_knowledge(
     knowledge_data: KnowledgeCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role(["employee", "supervisor"]))
-:
+):
     knowledge = KnowledgeService.create_knowledge(db, knowledge_data, current_user.id)
     return ApiResponse(data=knowledge, message="提交成功")
 
@@ -66,7 +66,7 @@ def update_knowledge(
     knowledge_data: KnowledgeUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role(["employee", "supervisor"]))
-:
+):
     knowledge = KnowledgeService.update_knowledge(db, knowledge_id, knowledge_data, current_user.id)
     return ApiResponse(data=knowledge, message="更新成功")
 
@@ -76,6 +76,6 @@ def delete_knowledge(
     knowledge_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role(["employee", "supervisor"]))
-:
+):
     KnowledgeService.delete_knowledge(db, knowledge_id, current_user.id)
     return ApiResponse(message="删除成功")
