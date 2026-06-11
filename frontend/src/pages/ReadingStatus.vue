@@ -13,6 +13,17 @@
         <a-select-option :value="true">已读</a-select-option>
         <a-select-option :value="false">未读</a-select-option>
       </a-select>
+          <a-select
+            v-model:value="expiryFilter"
+            placeholder="复核到期"
+            style="width: 130px"
+            allow-clear
+            @change="loadData"
+          >
+            <a-select-option value="normal">正常</a-select-option>
+            <a-select-option value="upcoming">即将到期</a-select-option>
+            <a-select-option value="overdue">已到期</a-select-option>
+          </a-select>
           <a-button @click="loadData">
             <ReloadOutlined /> 刷新
           </a-button>
@@ -56,9 +67,15 @@
         @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'is_read'">
+          <template v-else-if="column.key === 'is_read'">
             <a-tag v-if="record.is_read" color="green">已读</a-tag>
             <a-tag v-else color="red">未读</a-tag>
+          </template>
+          <template v-else-if="column.key === 'review_expiry_status'">
+            <a-tag v-if="record.review_expiry_status === 'normal'" color="green">正常</a-tag>
+            <a-tag v-else-if="record.review_expiry_status === 'upcoming'" color="orange">即将到期</a-tag>
+            <a-tag v-else-if="record.review_expiry_status === 'overdue'" color="red">已到期</a-tag>
+            <span v-else>-</span>
           </template>
           <template v-else-if="column.key === 'read_at'">
             <span v-if="record.read_at">{{ formatDate(record.read_at) }}</span>
@@ -101,7 +118,14 @@
             <span>分类: {{ currentDetail.category_name }}</span>
             <span>提交人: {{ currentDetail.submitter_name }}</span>
             <span>{{ formatDate(currentDetail.created_at) }}</span>
+            <a-tag v-if="currentDetail.review_expiry_status === 'normal'" color="green">正常</a-tag>
+            <a-tag v-else-if="currentDetail.review_expiry_status === 'upcoming'" color="orange">即将到期</a-tag>
+            <a-tag v-else-if="currentDetail.review_expiry_status === 'overdue'" color="red">已到期</a-tag>
           </a-space>
+        </div>
+        <div v-if="currentDetail.next_review_date" class="detail-meta" style="margin-top: 8px">
+          <span>下次复核时间: {{ formatDate(currentDetail.next_review_date) }}</span>
+          <span style="margin-left: 16px">建议复核周期: {{ getCycleLabel(currentDetail.suggested_review_cycle) }}</span>
         </div>
         <a-divider />
         <div class="detail-body" v-html="currentDetail.content"></div>
@@ -123,6 +147,7 @@ import { markAsRead, markAsUnread } from '@/api/reading'
 
 const loading = ref(false)
 const filterStatus = ref<boolean | undefined>()
+const expiryFilter = ref<string | undefined>()
 const readingList = ref<ReadingStatusItem[]>([])
 const currentDetail = ref<KnowledgeItem | null>(null)
 const detailModalVisible = ref(false)
@@ -146,6 +171,7 @@ const columns = [
   { title: 'ID', dataIndex: 'id', key: 'id', width: 70 },
   { title: '知识标题', dataIndex: 'knowledge_title', key: 'knowledge_title', ellipsis: true },
   { title: '阅读状态', key: 'is_read', width: 100 },
+  { title: '复核到期', key: 'review_expiry_status', width: 100 },
   { title: '阅读时间', key: 'read_at', width: 180 },
   { title: '操作', key: 'action', width: 200, fixed: 'right' }
 ]
@@ -155,7 +181,8 @@ const loadData = async () => {
   try {
     const res = await getMyReadingStatus({
       page: pagination.current,
-      page_size: pagination.pageSize
+      page_size: pagination.pageSize,
+      review_expiry_status: expiryFilter.value
     })
     if (res.code === 200) {
       const data = res.data
@@ -210,6 +237,17 @@ const handleMarkUnread = async (knowledgeId: number) => {
 
 const formatDate = (date: string) => {
   return new Date(date).toLocaleString('zh-CN')
+}
+
+const getCycleLabel = (cycle?: string) => {
+  const labels: Record<string, string> = {
+    '1month': '1个月',
+    '3months': '3个月',
+    '6months': '6个月',
+    '1year': '1年',
+    'never': '永不'
+  }
+  return labels[cycle || ''] || '未设置'
 }
 
 onMounted(() => {

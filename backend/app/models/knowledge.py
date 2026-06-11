@@ -13,6 +13,8 @@ class Knowledge(Base):
     submitter_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     review_status = Column(String(20), default="pending")
     reject_reason = Column(Text)
+    suggested_review_cycle = Column(String(20), default="6months")
+    next_review_date = Column(DateTime)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 

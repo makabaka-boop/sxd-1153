@@ -1,5 +1,7 @@
 import request, { type ApiResponse } from './request'
 
+export type ReviewExpiryStatus = 'normal' | 'upcoming' | 'overdue' | null
+
 export interface KnowledgeItem {
   id: number
   title: string
@@ -11,6 +13,9 @@ export interface KnowledgeItem {
   review_status: 'pending' | 'approved' | 'rejected'
   reject_reason?: string
   is_read?: boolean
+  suggested_review_cycle?: string
+  next_review_date?: string
+  review_expiry_status?: ReviewExpiryStatus
   created_at: string
   updated_at: string
 }
@@ -26,12 +31,14 @@ export interface KnowledgeCreate {
   title: string
   content: string
   category_id: number
+  suggested_review_cycle?: string
 }
 
 export interface KnowledgeUpdate {
   title?: string
   content?: string
   category_id?: number
+  suggested_review_cycle?: string
 }
 
 export const getKnowledgeList = (params: {
@@ -40,6 +47,7 @@ export const getKnowledgeList = (params: {
   page_size?: number
   review_status?: string
   keyword?: string
+  review_expiry_status?: string
 }) => {
   return request.get<any, ApiResponse<KnowledgeListResponse>>('/knowledge', { params })
 }
@@ -47,6 +55,7 @@ export const getKnowledgeList = (params: {
 export const getMyKnowledge = (params: {
   page?: number
   page_size?: number
+  review_expiry_status?: string
 }) => {
   return request.get<any, ApiResponse<KnowledgeListResponse>>('/knowledge/my', { params })
 }

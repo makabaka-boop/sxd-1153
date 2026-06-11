@@ -1,19 +1,44 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from typing import List
+from typing import List, Optional
+from datetime import datetime, timedelta
 from backend.app.models import Knowledge, ReviewRecord, Category
 from backend.app.schemas import ReviewRequest, ReviewBatchRequest
+from backend.app.services.knowledge_service import calculate_next_review_date, get_review_expiry_status
 
 
 class ReviewService:
     @staticmethod
-    def get_pending_list(db: Session, page: int = 1, page_size: int = 10):
+    def get_pending_list(db: Session, page: int = 1, page_size: int = 10, review_expiry_status: Optional[str] = None):
         query = db.query(Knowledge).filter(Knowledge.review_status == "pending")
+        
+        if review_expiry_status:
+            now = datetime.now()
+            if review_expiry_status == 'overdue':
+                query = query.filter(
+                    Knowledge.next_review_date.isnot(None),
+                    Knowledge.next_review_date < now
+                )
+            elif review_expiry_status == 'upcoming':
+                thirty_days_later = now + timedelta(days=30)
+                query = query.filter(
+                    Knowledge.next_review_date.isnot(None),
+                    Knowledge.next_review_date >= now,
+                    Knowledge.next_review_date <= thirty_days_later
+                )
+            elif review_expiry_status == 'normal':
+                thirty_days_later = now + timedelta(days=30)
+                query = query.filter(
+                    Knowledge.next_review_date.isnot(None),
+                    Knowledge.next_review_date > thirty_days_later
+                )
+        
         total = query.count()
         items = query.order_by(Knowledge.created_at.asc()).offset((page - 1) * page_size).limit(page_size).all()
         
         result = []
         for item in items:
+            expiry_status = get_review_expiry_status(item.next_review_date, item.review_status)
             result.append({
                 "id": item.id,
                 "title": item.title,
@@ -25,6 +50,9 @@ class ReviewService:
                 "review_status": item.review_status,
                 "reject_reason": item.reject_reason,
                 "is_read": None,
+                "suggested_review_cycle": item.suggested_review_cycle,
+                "next_review_date": item.next_review_date,
+                "review_expiry_status": expiry_status,
                 "created_at": item.created_at,
                 "updated_at": item.updated_at
             })
@@ -62,6 +90,9 @@ class ReviewService:
         
         knowledge.review_status = "approved"
         knowledge.reject_reason = None
+        
+        next_review = calculate_next_review_date(knowledge.suggested_review_cycle)
+        knowledge.next_review_date = next_review
         
         review_record = ReviewRecord(
             knowledge_id=knowledge_id,
@@ -114,6 +145,9 @@ class ReviewService:
                     knowledge.review_status = "approved"
                     knowledge.reject_reason = None
                     
+                    next_review = calculate_next_review_date(knowledge.suggested_review_cycle)
+                    knowledge.next_review_date = next_review
+                    
                     review_record = ReviewRecord(
                         knowledge_id=kid,
                         reviewer_id=reviewer_id,
@@ -155,8 +189,26 @@ class ReviewService:
         approved_count = db.query(Knowledge).filter(Knowledge.review_status == "approved").count()
         rejected_count = db.query(Knowledge).filter(Knowledge.review_status == "rejected").count()
         
+        now = datetime.now()
+        thirty_days_later = now + timedelta(days=30)
+        
+        upcoming_count = db.query(Knowledge).filter(
+            Knowledge.review_status == "approved",
+            Knowledge.next_review_date.isnot(None),
+            Knowledge.next_review_date >= now,
+            Knowledge.next_review_date <= thirty_days_later
+        ).count()
+        
+        overdue_count = db.query(Knowledge).filter(
+            Knowledge.review_status == "approved",
+            Knowledge.next_review_date.isnot(None),
+            Knowledge.next_review_date < now
+        ).count()
+        
         return {
             "pending_count": pending_count,
             "approved_count": approved_count,
-            "rejected_count": rejected_count
+            "rejected_count": rejected_count,
+            "upcoming_count": upcoming_count,
+            "overdue_count": overdue_count
         }

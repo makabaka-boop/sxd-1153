@@ -27,8 +27,8 @@
           </a-statistic>
         </a-card>
       </a-col>
-      <a-col :xs="24" :sm="12" :lg="6">
-        <a-card class="stat-card" v-if="userStore.hasRole('supervisor')">
+      <a-col :xs="24" :sm="12" :lg="6" v-if="userStore.hasRole('supervisor')">
+        <a-card class="stat-card">
           <a-statistic
             title="待我复核"
             :value="stats.pending_review_count"
@@ -39,7 +39,9 @@
             </template>
           </a-statistic>
         </a-card>
-        <a-card class="stat-card" v-else>
+      </a-col>
+      <a-col :xs="24" :sm="12" :lg="6" v-else>
+        <a-card class="stat-card">
           <a-statistic
             title="我已提交"
             :value="stats.my_submitted_count"
@@ -60,6 +62,35 @@
           >
             <template #prefix>
               <FolderOpenOutlined />
+            </template>
+          </a-statistic>
+        </a-card>
+      </a-col>
+    </a-row>
+
+    <a-row :gutter="[16, 16]" style="margin-top: 16px" v-if="userStore.hasRole('supervisor')">
+      <a-col :xs="24" :sm="12" :lg="6">
+        <a-card class="stat-card">
+          <a-statistic
+            title="即将到期"
+            :value="stats.upcoming_count"
+            :value-style="{ color: '#faad14' }"
+          >
+            <template #prefix>
+              <WarningOutlined />
+            </template>
+          </a-statistic>
+        </a-card>
+      </a-col>
+      <a-col :xs="24" :sm="12" :lg="6">
+        <a-card class="stat-card">
+          <a-statistic
+            title="已到期"
+            :value="stats.overdue_count"
+            :value-style="{ color: '#f5222d' }"
+          >
+            <template #prefix>
+              <AlertOutlined />
             </template>
           </a-statistic>
         </a-card>
@@ -111,7 +142,9 @@ import {
   ExclamationCircleOutlined,
   ClockCircleOutlined,
   FileAddOutlined,
-  FolderOpenOutlined
+  FolderOpenOutlined,
+  WarningOutlined,
+  AlertOutlined
 } from '@ant-design/icons-vue'
 import { getKnowledgeList, type KnowledgeItem } from '@/api/knowledge'
 import { getAllNodesSummary } from '@/api/summary'
@@ -132,7 +165,9 @@ const stats = reactive({
   unread_count: 0,
   pending_review_count: 0,
   my_submitted_count: 0,
-  category_count: 0
+  category_count: 0,
+  upcoming_count: 0,
+  overdue_count: 0
 })
 
 const loadStats = async () => {
@@ -155,6 +190,8 @@ const loadStats = async () => {
 
     if (reviewRes.data) {
       stats.pending_review_count = reviewRes.data.pending_count
+      stats.upcoming_count = reviewRes.data.upcoming_count || 0
+      stats.overdue_count = reviewRes.data.overdue_count || 0
     }
 
     const countNodes = (nodes: any[]): number => {

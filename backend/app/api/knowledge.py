@@ -20,11 +20,12 @@ def get_knowledge_list(
     page_size: int = Query(10, ge=1, le=100, description="每页数量"),
     review_status: Optional[str] = Query(None, description="复核状态"),
     keyword: Optional[str] = Query(None, description="搜索关键词（标题或内容）"),
+    review_expiry_status: Optional[str] = Query(None, description="复核到期状态：normal/upcoming/overdue"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     result = KnowledgeService.get_knowledge_list(
-        db, category_id, page, page_size, current_user.id, review_status, keyword
+        db, category_id, page, page_size, current_user.id, review_status, keyword, review_expiry_status
     )
     return ApiResponse(data=result)
 
@@ -33,10 +34,11 @@ def get_knowledge_list(
 def get_my_knowledge(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(10, ge=1, le=100, description="每页数量"),
+    review_expiry_status: Optional[str] = Query(None, description="复核到期状态：normal/upcoming/overdue"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role(["employee", "supervisor"]))
 ):
-    result = KnowledgeService.get_my_knowledge(db, current_user.id, page, page_size)
+    result = KnowledgeService.get_my_knowledge(db, current_user.id, page, page_size, review_expiry_status)
     return ApiResponse(data=result)
 
 

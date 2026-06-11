@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
+from typing import Optional
 from backend.app.database import get_db
 from backend.app.schemas import ApiResponse
 from backend.app.services import ReadingService
@@ -13,10 +14,11 @@ router = APIRouter()
 def get_my_reading_status(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(10, ge=1, le=100, description="每页数量"),
+    review_expiry_status: Optional[str] = Query(None, description="复核到期状态：normal/upcoming/overdue"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role(["employee", "supervisor", "admin"]))
 ):
-    result = ReadingService.get_my_reading_status(db, current_user.id, page, page_size)
+    result = ReadingService.get_my_reading_status(db, current_user.id, page, page_size, review_expiry_status)
     return ApiResponse(data=result)
 
 
